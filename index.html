@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>防災大亂鬥 V36.0：新手引導增強版</title>
+<title>防災大亂鬥 V37.0：手機介面修復版</title>
 <style>
     /* === 1. 佈局設定 === */
+    /* 全局禁止滑動，這是為了搖桿操作 */
     * { box-sizing: border-box; touch-action: none; user-select: none; -webkit-user-select: none; }
+    
     body { 
         margin: 0; padding: 0; background: #000; 
         font-family: '微軟正黑體', sans-serif; 
@@ -63,7 +65,7 @@
     }
     .act-btn:active, .act-btn.active { transform: translateY(6px); box-shadow: none; background: #e44; }
 
-    /* 彈窗 */
+    /* 彈窗系統 (針對手機優化) */
     .modal-overlay { 
         position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
         background: rgba(0,0,0,0.95); z-index: 100; 
@@ -73,21 +75,40 @@
         background: #2a2a2a; border: 2px solid #ffd700; border-radius: 15px; 
         padding: 20px; width: 90%; max-width: 500px; text-align: center; color: white; 
         box-shadow: 0 0 30px rgba(0,0,0,0.8);
-        max-height: 90vh; overflow-y: auto; /* 防止內容太長 */
+        
+        /* 關鍵修正：允許彈窗內部滑動，限制最大高度 */
+        touch-action: pan-y !important; 
+        max-height: 85vh; 
+        display: flex; flex-direction: column;
     }
+    
+    /* 內容捲動區 */
+    .scroll-content {
+        overflow-y: auto;
+        flex: 1; /* 佔據剩餘空間 */
+        margin-bottom: 10px;
+        /* 修復 iOS 捲動 */
+        -webkit-overflow-scrolling: touch; 
+    }
+
     .btn-green { 
         background: #28a745; color: white; border: none; padding: 12px 30px; 
-        font-size: 20px; border-radius: 40px; margin-top: 15px; cursor: pointer; font-weight: bold; 
-        box-shadow: 0 4px 0 #19692c; width: 80%;
+        font-size: 20px; border-radius: 40px; cursor: pointer; font-weight: bold; 
+        box-shadow: 0 4px 0 #19692c; width: 100%;
+        flex-shrink: 0; /* 防止按鈕被壓扁 */
     }
-    .opt-btn { width: 100%; background: #444; border: 1px solid #666; color: white; padding: 15px; margin: 8px 0; border-radius: 8px; text-align: left; font-size: 18px; }
+    .opt-btn { 
+        width: 100%; background: #444; border: 1px solid #666; color: white; 
+        padding: 15px; margin: 8px 0; border-radius: 8px; text-align: left; font-size: 18px; 
+        touch-action: pan-y !important; /* 確保選項也能滑 */
+    }
     .float-txt { position: absolute; font-weight: bold; font-size: 24px; animation: floatUp 0.8s forwards; text-shadow: 2px 2px 0 #000; z-index: 50; pointer-events: none; }
     @keyframes floatUp { to { transform: translateY(-50px); opacity: 0; } }
 
     /* 新手引導樣式 */
-    .guide-box { background: #333; padding: 15px; border-radius: 10px; margin: 15px 0; text-align: left; font-size: 15px; line-height: 1.6; color: #ddd; border: 1px solid #555; }
+    .guide-box { background: #333; padding: 15px; border-radius: 10px; margin: 0 0 10px 0; text-align: left; font-size: 15px; line-height: 1.6; color: #ddd; border: 1px solid #555; }
     .item-row { display: flex; align-items: center; margin: 8px 0; }
-    .icon-demo { width: 30px; height: 30px; display: inline-flex; justify-content: center; align-items: center; border-radius: 5px; margin-right: 10px; font-weight: bold; font-size: 18px; }
+    .icon-demo { width: 30px; height: 30px; display: inline-flex; justify-content: center; align-items: center; border-radius: 5px; margin-right: 10px; font-weight: bold; font-size: 18px; flex-shrink: 0; }
     .icon-gun { background: #aaa; color: #000; }
     .icon-hand { background: #93f; color: #fff; }
     .icon-plus { background: #0f0; color: #000; }
@@ -121,47 +142,51 @@
 
 <div id="modal-start" class="modal-overlay" style="z-index:200;">
     <div class="panel">
-        <h1 style="color:#ffd700; margin:0 0 10px 0; font-size: 28px;">🛡️ 防災大亂鬥</h1>
-        <p style="color:#aaa; font-size:14px; margin-bottom:15px;">V36.0 新手教學版</p>
-        
-        <div class="guide-box">
-            <div style="border-bottom:1px solid #555; padding-bottom:10px; margin-bottom:10px;">
-                <strong>🎮 遊戲目標：</strong><br>
-                操控 <span style="color:#ff6633">🦊 P1</span> 搶奪場上的 <span class="highlight">15 把鑰匙</span>。<br>
-                碰到鑰匙需回答防災問題，答對得分！
-            </div>
+        <div class="scroll-content">
+            <h1 style="color:#ffd700; margin:0 0 10px 0; font-size: 28px;">🛡️ 防災大亂鬥</h1>
+            <p style="color:#aaa; font-size:14px; margin-bottom:15px;">V37.0 手機修復版</p>
             
-            <strong>📦 道具說明：</strong> (答題獲得)
-            <div class="item-row">
-                <span class="icon-demo icon-gun">🔫</span> 
-                <span><strong>訊號槍：</strong>扣對手 <span style="color:#f55">2 分</span> (需靠近)</span>
-            </div>
-            <div class="item-row">
-                <span class="icon-demo icon-hand">✋</span> 
-                <span><strong>偷竊手：</strong>偷對手 <span style="color:#f55">2 分</span> 給自己</span>
-            </div>
-            <div class="item-row">
-                <span class="icon-demo icon-plus">✚</span> 
-                <span><strong>急救包：</strong>自己直接 <span style="color:#0f0">+3 分</span></span>
-            </div>
-            
-            <div style="margin-top:10px; font-size:13px; color:#888;">
-                ⚠️ 小心 AI 熊也會搶分！按 <span style="color:#f55; border:1px solid #555; padding:0 4px; border-radius:4px;">USE</span> 鍵使用道具。
+            <div class="guide-box">
+                <div style="border-bottom:1px solid #555; padding-bottom:10px; margin-bottom:10px;">
+                    <strong>🎮 遊戲目標：</strong><br>
+                    操控 <span style="color:#ff6633">🦊 P1</span> 搶奪場上的 <span class="highlight">15 把鑰匙</span>。<br>
+                    碰到鑰匙需回答防災問題，答對得分！
+                </div>
+                
+                <strong>📦 道具說明：</strong> (答題獲得)
+                <div class="item-row">
+                    <span class="icon-demo icon-gun">🔫</span> 
+                    <span><strong>訊號槍：</strong>扣對手 <span style="color:#f55">2 分</span> (需靠近)</span>
+                </div>
+                <div class="item-row">
+                    <span class="icon-demo icon-hand">✋</span> 
+                    <span><strong>偷竊手：</strong>偷對手 <span style="color:#f55">2 分</span> 給自己</span>
+                </div>
+                <div class="item-row">
+                    <span class="icon-demo icon-plus">✚</span> 
+                    <span><strong>急救包：</strong>自己直接 <span style="color:#0f0">+3 分</span></span>
+                </div>
+                
+                <div style="margin-top:10px; font-size:13px; color:#888;">
+                    ⚠️ 小心 AI 熊也會搶分！<br>
+                    🕹️ 畫面下方有方向鍵與使用鍵。
+                </div>
             </div>
         </div>
-
-        <button class="btn-green" onclick="startGame()">🔊 點擊開啟音效並開始</button>
+        <button class="btn-green" id="start-btn" onclick="startGame()" ontouchend="startGame()">🔊 點擊開始</button>
     </div>
 </div>
 
 <div id="modal-quiz" class="modal-overlay" style="display:none;">
     <div class="panel">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px; color:#ffd700; border-bottom:1px solid #555; padding-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; color:#ffd700; border-bottom:1px solid #555; padding-bottom:10px; width:100%;">
             <span id="q-type" style="font-weight:bold; font-size:20px;">題目</span>
             <span id="q-timer" style="color:red; font-weight:bold; font-size:20px;">30</span>
         </div>
-        <div id="q-text" style="text-align:left; margin-bottom:20px; font-weight:bold; font-size:20px; line-height:1.4;"></div>
-        <div id="q-opts"></div>
+        <div class="scroll-content" style="width:100%;">
+            <div id="q-text" style="text-align:left; margin-bottom:20px; font-weight:bold; font-size:20px; line-height:1.4;"></div>
+            <div id="q-opts"></div>
+        </div>
     </div>
 </div>
 
@@ -170,7 +195,7 @@
         <div id="end-avatar" style="margin-bottom:15px;"></div>
         <h1 id="end-title" style="font-size:32px; margin:5px 0;"></h1>
         <h2 id="end-score" style="color:#ddd; font-size:24px; margin-top:5px;"></h2>
-        <button class="btn-green" onclick="location.reload()">再玩一次</button>
+        <button class="btn-green" onclick="location.reload()" ontouchend="location.reload()">再玩一次</button>
     </div>
 </div>
 
@@ -231,6 +256,7 @@
     ];
 
     function startGame() {
+        if(gameActive) return; // 避免重複點擊
         Sfx.init(); if(Sfx.ctx) Sfx.ctx.resume();
         document.getElementById('modal-start').style.display = 'none';
         gameActive = true; startTime = Date.now();
@@ -412,6 +438,8 @@
         let div = document.getElementById('q-opts'); div.innerHTML='';
         q.ans.sort(()=>Math.random()-0.5).forEach(a=>{
             let btn=document.createElement('button'); btn.className='opt-btn'; btn.innerText=a.t;
+            // 讓選項按鈕也能在手機上順利點擊
+            btn.ontouchend = (e) => { e.stopPropagation(); btn.click(); };
             btn.onclick=()=>{
                 if(a.c){ 
                     Sfx.play('ok'); 
