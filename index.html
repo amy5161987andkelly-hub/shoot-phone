@@ -3,16 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>防災大亂鬥 V37.0：手機介面修復版</title>
+<title>防災大亂鬥 V39.0：iOS 完美相容版</title>
 <style>
-    /* === 1. 佈局設定 === */
-    /* 全局禁止滑動，這是為了搖桿操作 */
-    * { box-sizing: border-box; touch-action: none; user-select: none; -webkit-user-select: none; }
-    
-    body { 
-        margin: 0; padding: 0; background: #000; 
-        font-family: '微軟正黑體', sans-serif; 
-        height: 100vh; width: 100vw; overflow: hidden;
+    /* === 1. 全局基礎設定 (針對 iOS 優化) === */
+    html, body {
+        margin: 0; padding: 0; background: #000;
+        font-family: '微軟正黑體', sans-serif;
+        height: 100%; width: 100%; overflow: hidden;
+        
+        /* iOS 專用：禁止選取、禁止長按跳出選單 */
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        
+        /* 禁止預設滑動行為，稍後對說明文字解鎖 */
+        touch-action: none;
         display: flex; flex-direction: column;
     }
 
@@ -42,15 +49,21 @@
         width: 100%; background: #111; border-top: 2px solid #333;
         display: flex; align-items: center; justify-content: space-between;
         padding: 0 40px 50px 40px; z-index: 20;
+        /* 這裡絕對禁止滑動，確保按鈕不被干擾 */
+        touch-action: none;
     }
 
     /* 按鈕樣式 */
-    .dpad-container { position: relative; width: 160px; height: 160px; }
+    .dpad-container { position: relative; width: 160px; height: 160px; touch-action: none; }
     .dbtn {
         position: absolute; width: 55px; height: 55px;
         background: #333; border: 2px solid #555; border-radius: 12px;
         color: #fff; display: flex; justify-content: center; align-items: center; font-size: 28px;
         box-shadow: 0 4px 0 #000;
+        cursor: pointer;
+        /* 再次強調禁止手勢 */
+        touch-action: none; 
+        -webkit-tap-highlight-color: transparent;
     }
     .dbtn:active, .dbtn.active { background: #555; transform: translateY(4px); box-shadow: none; }
     #dp-u { top: 0; left: 52px; } #dp-d { bottom: 0; left: 52px; }
@@ -62,45 +75,48 @@
         color: white; font-weight: bold; font-size: 22px;
         display: flex; justify-content: center; align-items: center;
         box-shadow: 0 6px 0 #500;
+        touch-action: none;
+        -webkit-tap-highlight-color: transparent;
     }
     .act-btn:active, .act-btn.active { transform: translateY(6px); box-shadow: none; background: #e44; }
 
-    /* 彈窗系統 (針對手機優化) */
+    /* 彈窗系統 */
     .modal-overlay { 
         position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
         background: rgba(0,0,0,0.95); z-index: 100; 
         display: flex; flex-direction: column; align-items: center; justify-content: center; 
     }
+    
     .panel { 
         background: #2a2a2a; border: 2px solid #ffd700; border-radius: 15px; 
         padding: 20px; width: 90%; max-width: 500px; text-align: center; color: white; 
         box-shadow: 0 0 30px rgba(0,0,0,0.8);
-        
-        /* 關鍵修正：允許彈窗內部滑動，限制最大高度 */
-        touch-action: pan-y !important; 
-        max-height: 85vh; 
+        max-height: 80vh; 
         display: flex; flex-direction: column;
+        position: relative;
     }
     
-    /* 內容捲動區 */
+    /* 內容滾動區：這裡唯一允許滑動的地方 */
     .scroll-content {
-        overflow-y: auto;
-        flex: 1; /* 佔據剩餘空間 */
-        margin-bottom: 10px;
-        /* 修復 iOS 捲動 */
+        flex: 1;                
+        overflow-y: scroll;     
         -webkit-overflow-scrolling: touch; 
+        margin-bottom: 15px;
+        padding-right: 5px;     
+        touch-action: pan-y;    /* 允許垂直滑動 */
     }
 
     .btn-green { 
         background: #28a745; color: white; border: none; padding: 12px 30px; 
         font-size: 20px; border-radius: 40px; cursor: pointer; font-weight: bold; 
         box-shadow: 0 4px 0 #19692c; width: 100%;
-        flex-shrink: 0; /* 防止按鈕被壓扁 */
+        flex-shrink: 0;
+        touch-action: manipulation;
     }
     .opt-btn { 
         width: 100%; background: #444; border: 1px solid #666; color: white; 
         padding: 15px; margin: 8px 0; border-radius: 8px; text-align: left; font-size: 18px; 
-        touch-action: pan-y !important; /* 確保選項也能滑 */
+        touch-action: pan-y; 
     }
     .float-txt { position: absolute; font-weight: bold; font-size: 24px; animation: floatUp 0.8s forwards; text-shadow: 2px 2px 0 #000; z-index: 50; pointer-events: none; }
     @keyframes floatUp { to { transform: translateY(-50px); opacity: 0; } }
@@ -144,7 +160,7 @@
     <div class="panel">
         <div class="scroll-content">
             <h1 style="color:#ffd700; margin:0 0 10px 0; font-size: 28px;">🛡️ 防災大亂鬥</h1>
-            <p style="color:#aaa; font-size:14px; margin-bottom:15px;">V37.0 手機修復版</p>
+            <p style="color:#aaa; font-size:14px; margin-bottom:15px;">V39.0 iOS 完美相容版</p>
             
             <div class="guide-box">
                 <div style="border-bottom:1px solid #555; padding-bottom:10px; margin-bottom:10px;">
@@ -153,27 +169,28 @@
                     碰到鑰匙需回答防災問題，答對得分！
                 </div>
                 
-                <strong>📦 道具說明：</strong> (答題獲得)
+                <strong>📦 道具說明 (請上下滑動查看)：</strong>
                 <div class="item-row">
                     <span class="icon-demo icon-gun">🔫</span> 
-                    <span><strong>訊號槍：</strong>扣對手 <span style="color:#f55">2 分</span> (需靠近)</span>
+                    <span><strong>訊號槍：</strong>扣對手 <span style="color:#f55">2 分</span> (需靠近對手使用)</span>
                 </div>
                 <div class="item-row">
                     <span class="icon-demo icon-hand">✋</span> 
-                    <span><strong>偷竊手：</strong>偷對手 <span style="color:#f55">2 分</span> 給自己</span>
+                    <span><strong>偷竊手：</strong>偷對手 <span style="color:#f55">2 分</span> 加給自己</span>
                 </div>
                 <div class="item-row">
                     <span class="icon-demo icon-plus">✚</span> 
-                    <span><strong>急救包：</strong>自己直接 <span style="color:#0f0">+3 分</span></span>
+                    <span><strong>急救包：</strong>自己直接 <span style="color:#0f0">+3 分</span> (拿到立刻用)</span>
                 </div>
                 
                 <div style="margin-top:10px; font-size:13px; color:#888;">
                     ⚠️ 小心 AI 熊也會搶分！<br>
-                    🕹️ 畫面下方有方向鍵與使用鍵。
+                    🕹️ 畫面下方有方向鍵與使用鍵。<br>
+                    祝你挑戰成功！
                 </div>
             </div>
         </div>
-        <button class="btn-green" id="start-btn" onclick="startGame()" ontouchend="startGame()">🔊 點擊開始</button>
+        <button class="btn-green" id="start-btn" onclick="startGame()">🔊 點擊開始</button>
     </div>
 </div>
 
@@ -195,11 +212,24 @@
         <div id="end-avatar" style="margin-bottom:15px;"></div>
         <h1 id="end-title" style="font-size:32px; margin:5px 0;"></h1>
         <h2 id="end-score" style="color:#ddd; font-size:24px; margin-top:5px;"></h2>
-        <button class="btn-green" onclick="location.reload()" ontouchend="location.reload()">再玩一次</button>
+        <button class="btn-green" onclick="location.reload()">再玩一次</button>
     </div>
 </div>
 
 <script>
+    // --- 0. 關鍵修復：全域觸控管理 ---
+    // 解決 iOS 上「上一頁」手勢與遊戲操作的衝突
+    document.addEventListener('contextmenu', event => event.preventDefault()); // 禁止右鍵選單
+
+    document.body.addEventListener('touchmove', function(e) {
+        // 只有在 .scroll-content 裡面才允許滑動
+        if (e.target.closest('.scroll-content')) {
+            return; // 允許預設行為
+        }
+        // 其他地方一律禁止，防止拖拉畫面造成遊戲卡住
+        if (e.cancelable) e.preventDefault();
+    }, { passive: false });
+
     // --- 1. 音效 ---
     const Sfx = {
         ctx: null,
@@ -256,26 +286,60 @@
     ];
 
     function startGame() {
-        if(gameActive) return; // 避免重複點擊
+        if(gameActive) return; 
         Sfx.init(); if(Sfx.ctx) Sfx.ctx.resume();
         document.getElementById('modal-start').style.display = 'none';
         gameActive = true; startTime = Date.now();
         if(mainScene) mainScene.physics.resume();
     }
 
-    // --- 4. 控制 ---
+    // --- 4. 控制 (iOS 強力修復版) ---
     const bindBtn = (id, k) => {
         let el = document.getElementById(id);
-        const on = (e) => { e.preventDefault(); inputs[k] = true; el.style.background='#555'; };
-        const off = (e) => { e.preventDefault(); inputs[k] = false; el.style.background='#333'; };
-        el.addEventListener('touchstart', on, {passive:false}); el.addEventListener('touchend', off);
-        el.addEventListener('mousedown', on); el.addEventListener('mouseup', off);
+        
+        // 觸控開始
+        const touchStart = (e) => { 
+            if(e.cancelable) e.preventDefault(); // 阻止 iOS 預設手勢 (如放大、選單)
+            e.stopPropagation(); // 阻止事件冒泡
+            inputs[k] = true; 
+            el.style.background='#555'; 
+            el.classList.add('active');
+        };
+
+        // 觸控結束
+        const touchEnd = (e) => { 
+            if(e.cancelable) e.preventDefault(); 
+            e.stopPropagation();
+            inputs[k] = false; 
+            el.style.background='#333'; 
+            el.classList.remove('active');
+        };
+
+        // 綁定事件：特別注意 passive: false 是 iOS 阻止預設行為的關鍵
+        el.addEventListener('touchstart', touchStart, {passive: false});
+        el.addEventListener('touchend', touchEnd, {passive: false});
+        el.addEventListener('touchcancel', touchEnd, {passive: false});
+
+        // 為了電腦版也能玩，保留滑鼠事件
+        el.addEventListener('mousedown', (e)=>{ inputs[k]=true; el.style.background='#555'; });
+        el.addEventListener('mouseup', (e)=>{ inputs[k]=false; el.style.background='#333'; });
+        el.addEventListener('mouseleave', (e)=>{ inputs[k]=false; el.style.background='#333'; });
     };
+
     bindBtn('dp-u','u'); bindBtn('dp-d','d'); bindBtn('dp-l','l'); bindBtn('dp-r','r');
     
+    // 功能鍵 (USE)
     const actBtn = document.getElementById('btn-act');
-    actBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); inputs.a=true; actBtn.style.background='#e44'; }, {passive:false});
-    actBtn.addEventListener('touchend', (e)=>{ e.preventDefault(); inputs.a=false; actBtn.style.background='#d33'; });
+    const actStart = (e) => {
+        if(e.cancelable) e.preventDefault(); e.stopPropagation();
+        inputs.a=true; actBtn.style.background='#e44';
+    };
+    const actEnd = (e) => {
+        if(e.cancelable) e.preventDefault(); e.stopPropagation();
+        inputs.a=false; actBtn.style.background='#d33';
+    };
+    actBtn.addEventListener('touchstart', actStart, {passive: false});
+    actBtn.addEventListener('touchend', actEnd, {passive: false});
     actBtn.addEventListener('mousedown', ()=>{ inputs.a=true; actBtn.style.background='#e44'; });
     actBtn.addEventListener('mouseup', ()=>{ inputs.a=false; actBtn.style.background='#d33'; });
 
@@ -438,9 +502,9 @@
         let div = document.getElementById('q-opts'); div.innerHTML='';
         q.ans.sort(()=>Math.random()-0.5).forEach(a=>{
             let btn=document.createElement('button'); btn.className='opt-btn'; btn.innerText=a.t;
-            // 讓選項按鈕也能在手機上順利點擊
-            btn.ontouchend = (e) => { e.stopPropagation(); btn.click(); };
-            btn.onclick=()=>{
+            // 修正：答題按鈕也要防止事件冒泡，以免誤觸背景
+            const clickHandler = (e) => { 
+                e.preventDefault(); e.stopPropagation();
                 if(a.c){ 
                     Sfx.play('ok'); 
                     target.destroy(); 
@@ -448,7 +512,10 @@
                 }
                 else{ Sfx.play('no'); p1.setPosition(p1.x-30,p1.y-30); }
                 closeQuiz();
-            }; div.appendChild(btn);
+            };
+            btn.addEventListener('touchend', clickHandler);
+            btn.addEventListener('click', clickHandler);
+            div.appendChild(btn);
         });
         let t=30; document.getElementById('q-timer').innerText=t;
         if(qTimer) clearInterval(qTimer);
